@@ -4,6 +4,9 @@ this algorithm takes a sparse point cloud within 3d space and converts
 it into a graph of many highly connected dense clusters and a set of far
 less dense components. The algorithm works by taking an array of points
 (x,y,z,n) where n is the vertex's number. Edges are of from (n1, n2, val)
+
+This operates as a DBSCAN that has an *ADJUSTABLE* radius for graph construction 
+IF the radius is too small THEN we do a KNN for that point
 '''
 
 #test cases
@@ -56,7 +59,7 @@ def KNN(vertices, k):
             graph.append((i, vertex[3],dict[i]))
     return graph
 
-print(KNN(l, 2))
+
 
 #future work: integrate radial graph const with knn from point cloud density
 #KNN should apply to high density regions and radial for low density
@@ -65,8 +68,41 @@ print(KNN(l, 2))
 #ideally do radius based on density unless neighbors less than min,
 #then do a KNN if this fails just do a separated process
 
-
+        
 #Determine density based on k neghbors avg distance 
 
+sdi = sorter(alldist(a,l))
+
 def density(k, sdict):
-    
+    avg = 0
+    count = 0
+    for a in sdict:
+        avg += sdict[a]  
+        if count == k+1:
+            return avg/(count-1)
+        count +=1
+density(2, sdi)
+
+def radgraph(point, sdict, density):
+    graph = []
+    for a in sdict:
+        if density >= sdict[a]:
+            graph.append((a, point))
+    return graph
+
+def GraphCon(k, points, eps):
+    graph = []
+    for p in points:
+        print(p)
+        sdict = sorter(alldist(p, points))
+        d = density(k, sdict)
+        if d <= eps:
+            g = GenGraph(p, sdict, k)
+            for i in g:
+                graph.append(i)
+        else:
+            r = radgraph(p, sdict, d)
+            for i in r:
+                graph.append(i)
+    return graph
+print(GraphCon(2, l, 4))
